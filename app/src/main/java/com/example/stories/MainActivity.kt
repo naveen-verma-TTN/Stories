@@ -14,7 +14,9 @@ import android.view.WindowManager
 
 class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
 
-    private val PROGRESS_COUNT = 6
+    companion object {
+        private const val PROGRESS_COUNT = 6
+    }
 
     private val durations = longArrayOf(
         5000L, 2500L, 3500L, 4000L, 5000L, 5000
@@ -68,7 +70,7 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.stories.setStoriesCount(6) // <- set stories
+        binding.stories.setStoriesCount(PROGRESS_COUNT) // <- set stories
 //        binding.stories.setStoryDuration(1200L) // <- set a story duration
 
         binding.stories.setStoriesCountWithDurations(durations)
