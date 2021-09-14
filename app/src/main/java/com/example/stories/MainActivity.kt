@@ -1,17 +1,19 @@
 package com.example.stories
 
 import android.annotation.SuppressLint
+import android.app.PictureInPictureParams
+import android.content.res.Configuration
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
-import com.example.stories.databinding.ActivityMainBinding
-import com.example.stories.storiesprogressview.StoriesProgressView
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.example.stories.databinding.ActivityMainBinding
+import com.example.stories.storiesprogressview.StoriesProgressView
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -99,6 +101,21 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
         startShow()
 
         bindListeners()
+
+        enablePIPSupport()
+    }
+
+    private fun enablePIPSupport() {
+        //PIP impl
+        binding.pipEnable.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val params = PictureInPictureParams.Builder()
+                    .build()
+                enterPictureInPictureMode(params)
+            } else {
+                enterPictureInPictureMode()
+            }
+        }
     }
 
     private fun initializePlayer() {
@@ -231,5 +248,19 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
     override fun onDestroy() {
         binding.stories.destroy()
         super.onDestroy()
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration?
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        if (isInPictureInPictureMode) {
+            binding.stories.visibility = View.GONE
+            binding.pipEnable.visibility = View.GONE
+        } else {
+            binding.stories.visibility = View.VISIBLE
+            binding.pipEnable.visibility = View.VISIBLE
+        }
     }
 }
