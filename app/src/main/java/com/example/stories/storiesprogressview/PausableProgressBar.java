@@ -102,7 +102,6 @@ final class PausableProgressBar extends FrameLayout {
 
         animation = new PausableScaleAnimation(0, 1, 1, 1, Animation.ABSOLUTE, 0, Animation.RELATIVE_TO_SELF, 0);
         animation.setDuration(duration);
-        animation.setStartOffset(700);
         animation.setInterpolator(new LinearInterpolator());
         animation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -149,7 +148,7 @@ final class PausableProgressBar extends FrameLayout {
 
     private static boolean mPaused = false;
 
-    private class PausableScaleAnimation extends ScaleAnimation {
+    private static class PausableScaleAnimation extends ScaleAnimation {
 
         private long mElapsedAtPause = 0;
 
