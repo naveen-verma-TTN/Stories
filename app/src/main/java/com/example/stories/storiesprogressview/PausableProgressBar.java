@@ -1,9 +1,11 @@
 package com.example.stories.storiesprogressview;
 
 import android.content.Context;
+
 import androidx.annotation.AttrRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +30,7 @@ final class PausableProgressBar extends FrameLayout {
 
     interface Callback {
         void onStartProgress();
+
         void onFinishProgress();
     }
 
@@ -99,12 +102,16 @@ final class PausableProgressBar extends FrameLayout {
 
         animation = new PausableScaleAnimation(0, 1, 1, 1, Animation.ABSOLUTE, 0, Animation.RELATIVE_TO_SELF, 0);
         animation.setDuration(duration);
+        animation.setStartOffset(500);
         animation.setInterpolator(new LinearInterpolator());
         animation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
-                frontProgressView.setVisibility(View.VISIBLE);
-                if (callback != null) callback.onStartProgress();
+
+                if (callback != null) {
+                    frontProgressView.setVisibility(View.VISIBLE);
+                    callback.onStartProgress();
+                }
             }
 
             @Override
@@ -113,11 +120,11 @@ final class PausableProgressBar extends FrameLayout {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                if (callback != null) callback.onFinishProgress();
+                if (callback != null && !mPaused) callback.onFinishProgress();
             }
         });
         animation.setFillAfter(true);
-        frontProgressView.startAnimation(animation);
+        if(!mPaused) frontProgressView.startAnimation(animation);
     }
 
     public void pauseProgress() {
@@ -140,10 +147,12 @@ final class PausableProgressBar extends FrameLayout {
         }
     }
 
+    private static boolean mPaused = false;
+
     private class PausableScaleAnimation extends ScaleAnimation {
 
         private long mElapsedAtPause = 0;
-        private boolean mPaused = false;
+
 
         PausableScaleAnimation(float fromX, float toX, float fromY,
                                float toY, int pivotXType, float pivotXValue, int pivotYType,

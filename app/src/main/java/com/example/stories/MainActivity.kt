@@ -1,9 +1,9 @@
 package com.example.stories
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.util.Log
 import android.widget.Toast
 import com.example.stories.databinding.ActivityMainBinding
@@ -19,7 +19,6 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 
 
 class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
-
     private var player: SimpleExoPlayer? = null
 
     companion object {
@@ -42,10 +41,10 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
 
     var pressTime = 0L
     var limit = 500L
-    private var touchFlag = false
 
     private lateinit var binding: ActivityMainBinding
 
+    @SuppressLint("ClickableViewAccessibility")
     private val onTouchListener: View.OnTouchListener = object : View.OnTouchListener {
         override fun onTouch(v: View?, event: MotionEvent): Boolean {
             when (event.action) {
@@ -53,14 +52,12 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
                     pressTime = System.currentTimeMillis()
                     binding.stories.pause()
                     player?.pause()
-                    touchFlag = true
                     return false
                 }
                 MotionEvent.ACTION_UP -> {
                     val now = System.currentTimeMillis()
                     binding.stories.resume()
                     player?.play()
-                    touchFlag = false
                     return limit < now - pressTime
                 }
             }
@@ -88,11 +85,10 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
             add(link1)
             add(link2)
             add(R.drawable.sample6)
-            add(link1)
+            add(link2)
         }
 
         binding.stories.setStoriesCount(PROGRESS_COUNT) // <- set stories
-//        binding.stories.setStoryDuration(1200L) // <- set a story duration
 
         binding.stories.setStoriesCountWithDurations(durations)
 
@@ -111,10 +107,11 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
             .also { exoPlayer ->
                 binding.videoView.player = exoPlayer
             }
+
+        player?.addListener(playbackStateListener())
     }
 
-
-    private fun playbackStateListener() = object : Player.EventListener {
+    private fun playbackStateListener() = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             val stateString: String = when (playbackState) {
                 ExoPlayer.STATE_IDLE -> "ExoPlayer.STATE_IDLE      -"
@@ -122,18 +119,14 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
 
                     binding.progessView.visibility = View.VISIBLE
 
-//                    binding.stories.pause()
-
                     "ExoPlayer.STATE_BUFFERING -"
                 }
                 ExoPlayer.STATE_READY -> {
 
                     binding.progessView.visibility = View.GONE
 
-//                    binding.stories.resume()
-
-                    if(!touchFlag)
-                        player?.play()
+                    binding.stories.resume()
+                    binding.stories.startStories(counter)
 
                     "ExoPlayer.STATE_READY     -"
                 }
@@ -157,36 +150,12 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
             player?.setMediaItem(mediaItem)
 
             player?.prepare()
-
-            player?.addListener(playbackStateListener())
+            player?.playWhenReady = true
 
             toggleView(false)
         }
 
         binding.stories.startStories() // <- start progress
-
-        if (resources.isNotEmpty() && resources[0] is String) {
-//            obtainOnTouch()
-        }
-    }
-
-    private fun obtainOnTouch() {
-        binding.skip.dispatchTouchEvent(
-            MotionEvent.obtain(
-                0,
-                0,
-                MotionEvent.ACTION_DOWN,
-                100f,
-                100f,
-                0.5f,
-                5f,
-                0,
-                1f,
-                1f,
-                0,
-                0
-            )
-        );
     }
 
     private fun bindListeners() {
@@ -208,12 +177,15 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
             binding.image.setImageResource(resources[counter] as Int)
 
             toggleView(true)
+
         } else {
             // player code
+            binding.stories.pause()
 
             val mediaItem = MediaItem.fromUri(resources[counter] as String)
             player?.setMediaItem(mediaItem)
             player?.prepare()
+            player?.playWhenReady = true
 
             toggleView(false)
         }
@@ -234,6 +206,7 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
             val mediaItem = MediaItem.fromUri(resources[counter] as String)
             player?.setMediaItem(mediaItem)
             player?.prepare()
+            player?.playWhenReady = true
 
             toggleView(false)
         }
@@ -254,7 +227,6 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
             binding.image.visibility = View.GONE
         }
     }
-
 
     override fun onDestroy() {
         binding.stories.destroy()
