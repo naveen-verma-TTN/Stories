@@ -21,8 +21,8 @@ final class PausableProgressBar extends FrameLayout {
 
     private static final int DEFAULT_PROGRESS_DURATION = 2000;
 
-    private View frontProgressView;
-    private View maxProgressView;
+    private final View frontProgressView;
+    private final View maxProgressView;
 
     private PausableScaleAnimation animation;
     private long duration = DEFAULT_PROGRESS_DURATION;
@@ -102,7 +102,7 @@ final class PausableProgressBar extends FrameLayout {
 
         animation = new PausableScaleAnimation(0, 1, 1, 1, Animation.ABSOLUTE, 0, Animation.RELATIVE_TO_SELF, 0);
         animation.setDuration(duration);
-        animation.setStartOffset(500);
+        animation.setStartOffset(700);
         animation.setInterpolator(new LinearInterpolator());
         animation.setAnimationListener(new Animation.AnimationListener() {
             @Override

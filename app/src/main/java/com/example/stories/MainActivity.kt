@@ -21,6 +21,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 
 
 class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
+    private var isBuffering: Boolean = false
     private var player: SimpleExoPlayer? = null
 
     companion object {
@@ -131,19 +132,31 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
     private fun playbackStateListener() = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             val stateString: String = when (playbackState) {
-                ExoPlayer.STATE_IDLE -> "ExoPlayer.STATE_IDLE      -"
+                ExoPlayer.STATE_IDLE -> {
+                    isBuffering = false
+
+                    binding.progessView.visibility = View.GONE
+
+                    "ExoPlayer.STATE_IDLE      -"
+                }
                 ExoPlayer.STATE_BUFFERING -> {
+                    isBuffering = true
 
                     binding.progessView.visibility = View.VISIBLE
 
                     "ExoPlayer.STATE_BUFFERING -"
                 }
                 ExoPlayer.STATE_READY -> {
+                    isBuffering = false
 
                     binding.progessView.visibility = View.GONE
 
                     binding.stories.resume()
-                    binding.stories.startStories(counter)
+
+                    if(counter == 0)
+                        binding.stories.startStories()
+                    else
+                        binding.stories.startStories(counter)
 
                     "ExoPlayer.STATE_READY     -"
                 }
@@ -160,6 +173,7 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
 
             toggleView(true)
 
+            binding.stories.startStories() // <- start progress
         } else {
             // player code
 
@@ -171,21 +185,26 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
 
             toggleView(false)
         }
-
-        binding.stories.startStories() // <- start progress
     }
 
     private fun bindListeners() {
         // bind reverse view
-        binding.reverse.setOnClickListener { binding.stories.reverse() }
+        binding.reverse.setOnClickListener {
+            if(!isBuffering)
+                binding.stories.reverse()
+        }
         binding.reverse.setOnTouchListener(onTouchListener)
 
         // bind skip view
-        binding.skip.setOnClickListener { binding.stories.skip() }
+        binding.skip.setOnClickListener {
+            if(!isBuffering)
+                binding.stories.skip() }
         binding.skip.setOnTouchListener(onTouchListener)
     }
 
     override fun onNext() {
+//        if(counter < resources.size) return
+
         resources[++counter]
 
         if (resources[counter] is Int) {
@@ -209,23 +228,29 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
     }
 
     override fun onPrev() {
-        resources[--counter]
+        if(counter == 0) {
+            startShow()
+        }
+        else {
+            resources[--counter]
 
-        if (resources[counter] is Int) {
-            player?.stop()
+            if (resources[counter] is Int) {
+                player?.stop()
 
-            binding.image.setImageResource(resources[counter] as Int)
+                binding.image.setImageResource(resources[counter] as Int)
 
-            toggleView(true)
-        } else {
-            // player code
+                toggleView(true)
+            } else {
+                // player code
+                binding.stories.pause()
 
-            val mediaItem = MediaItem.fromUri(resources[counter] as String)
-            player?.setMediaItem(mediaItem)
-            player?.prepare()
-            player?.playWhenReady = true
+                val mediaItem = MediaItem.fromUri(resources[counter] as String)
+                player?.setMediaItem(mediaItem)
+                player?.prepare()
+                player?.playWhenReady = true
 
-            toggleView(false)
+                toggleView(false)
+            }
         }
     }
 
@@ -247,6 +272,7 @@ class MainActivity : AppCompatActivity(), StoriesProgressView.StoriesListener {
 
     override fun onDestroy() {
         binding.stories.destroy()
+        player?.release()
         super.onDestroy()
     }
 
